@@ -13,9 +13,7 @@ class CharInfo {
 class AnagramSolver extends HookWidget {
   const AnagramSolver({super.key});
 
-  final anagram = 'dog in darkness teaching riots as train';
-
-  List<CharInfo> getCharInfos(String input) {
+  List<CharInfo> getCharInfos(String anagram, String input) {
     input = input.toLowerCase();
     var anagramChars = anagram.characters.map((c) => CharInfo(c)).toList();
     print(input);
@@ -30,7 +28,7 @@ class AnagramSolver extends HookWidget {
     return anagramChars;
   }
 
-  List<String> errors(String input) {
+  List<String> errors(String anagram, String input) {
     input = input.toLowerCase();
     var anagramChars = anagram.characters.map((c) => CharInfo(c)).toList();
     print(input);
@@ -54,57 +52,66 @@ class AnagramSolver extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final tc = useTextEditingController();
+    final anagram = useState('dog in darkness teaching riots as train');
     final text = useState("");
-    final remainingCharInfos = useState<List<CharInfo>>(
-        anagram.characters.map((c) => CharInfo(c)).toList());
-    final charInfos = getCharInfos(text.value);
+    final charInfos = getCharInfos(anagram.value, text.value);
 
-    return FractionallySizedBox(
-      widthFactor: 0.5,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-              height: 50,
-              child: Row(
-                children: charInfos
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 8),
+      child: ConstrainedBox(
+        constraints: BoxConstraints.loose(Size(400, double.infinity)),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+                height: 50,
+                child: Row(
+                  children: charInfos
+                      .map(
+                        (e) => Text(
+                          e.char,
+                          style: TextStyle(
+                              backgroundColor: e.used == true
+                                  ? Color.fromARGB(255, 17, 108, 46)
+                                  : null),
+                        ),
+                      )
+                      .toList(),
+                )),
+            const Text(
+              'Unused characters: ',
+              textAlign: TextAlign.start,
+            ),
+            Row(
+              children: [
+                ...charInfos
+                    .where((c) =>
+                        c.char != ' ' &&
+                        //charInfos.firstWhere((ch) => ch.char == c.char) == c &&
+                        c.used != true)
                     .map(
                       (e) => Text(
                         e.char,
-                        style: TextStyle(
-                            backgroundColor: e.used == true
-                                ? Color.fromARGB(255, 17, 108, 46)
-                                : null),
                       ),
                     )
-                    .toList(),
-              )),
-          const Text(
-            'Unused characters: ',
-            textAlign: TextAlign.start,
-          ),
-          Row(
-            children: [
-              ...charInfos
-                  .where((c) =>
-                      c.char != ' ' &&
-                      //charInfos.firstWhere((ch) => ch.char == c.char) == c &&
-                      c.used != true)
-                  .map(
-                    (e) => Text(
-                      e.char,
-                    ),
-                  )
-                  .toList()
-            ],
-          ),
-          TextField(
-            controller: tc,
-            onChanged: (val) => text.value = val,
-          ),
-          ...errors(text.value).map((err) => Text(err))
-        ],
+                    .toList()
+              ],
+            ),
+            TextField(
+              controller: tc,
+              onChanged: (val) => text.value = val,
+            ),
+            ...errors(anagram.value, text.value).map((err) => Text(err)),
+            Padding(
+              padding: EdgeInsets.only(top: 64),
+              child: TextField(
+                decoration: InputDecoration(hintText: 'Change anagram here'),
+                onChanged: (value) => anagram.value = value,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
